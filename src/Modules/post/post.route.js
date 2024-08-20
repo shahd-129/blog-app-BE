@@ -9,22 +9,25 @@ import {
   uploadImage,
 } from "./post.controllers.js";
 import { fileUpload } from "../../utils/Multer.js";
+import { cloudUploade } from "../../utils/Multer-cloud.js";
 
 const postRouter = Router();
 
 postRouter.post(
   "/addPost",
   auth(),
-  fileUpload({folder: "post"}).single("image"),
+  // fileUpload({ folder: "post" }).single("image"),
+  cloudUploade().single('image'),
   catchAysncErrorr(createPost)
 );
 postRouter.put(
   "/update/:userId",
   auth(),
-  fileUpload({folder: "post"}).single("image"),
+  // fileUpload({ folder: "post" }).single("image"),
+  cloudUploade().single('image'),
   catchAysncErrorr(updatePost)
 );
-postRouter.delete("/delete/:id",auth() ,catchAysncErrorr(deletePost));
+postRouter.delete("/delete/:id", auth(), catchAysncErrorr(deletePost));
 postRouter.get("/getAllPost", auth(), catchAysncErrorr(getAllPost));
 
 // postRouter.post(
