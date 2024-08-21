@@ -1,7 +1,6 @@
-import { mongoose, Schema, Types } from "mongoose";
+import { mongoose, Schema } from "mongoose";
 
-const userSchema = new mongoose.Schema({
-  title: { type: String , require: true },
+const postSchema = new mongoose.Schema({
   content: {
     type: String,
     require: true,
@@ -9,17 +8,23 @@ const userSchema = new mongoose.Schema({
  image: {
     type: Object,
     uniqe: true,
+    default:{
+      secure_url: null,
+      public_id:""
+    }
   },
  
  userId: {
     type: Schema.Types.ObjectId,
     ref:"User"
   },
- 
- 
+  date:{
+    type: Date,
+    require: true
+  }
 });
 
-const User = mongoose.model("user", userSchema);
+const Post = mongoose.model("Post", postSchema);
 
-export default User;
+export default Post;
 

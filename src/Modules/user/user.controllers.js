@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { AppError } from "../../utils/ErrorHandling.js";
 import { message } from "../../utils/constant/message.js";
-import { cloudRemove, cloudUploade } from "../../utils/cloudinary.js";
+import { cloudRemoveImage, cloudUploadeImage } from "../../utils/cloudinary.js";
 
 export const signup = async (req, res, next) => {
   const { email, password, phone, name } = req.body;
@@ -15,13 +15,13 @@ export const signup = async (req, res, next) => {
     throw new AppError("email already exists", 400);
   }
 
-  if (!req.file) {
-    return next(new AppError("Image is required", 400));
-    // console.log(req.file);
-  }
+  // if (!req.file) {
+  //   return next(new AppError("Image is required", 400));
+  //   // console.log(req.file);
+  // }
 
-  const fullPath = path.resolve(req.file.destination, req.file.filename);
-  const uploadImage = await cloudUploade(fullPath);
+  // const fullPath = path.resolve(req.file.destination, req.file.filename);
+  // const uploadImage = await cloudUploade(fullPath);
 
   const hashPass = bcrypt.hashSync(password, 10);
 
@@ -30,13 +30,13 @@ export const signup = async (req, res, next) => {
     password: hashPass,
     phone,
     name,
-    image: {
-      url: uploadImage.secure_url,
-      publicId: uploadImage.public_id,
-    },
+  //   image: {
+  //     url: uploadImage.secure_url,
+  //     publicId: uploadImage.public_id,
+  //   },
   });
 
-  fs.unlinkSync(fullPath);
+  // fs.unlinkSync(fullPath);
 
   res.status(201).json({
     message: "User created successfully",
@@ -68,11 +68,11 @@ export const updateUser = async (req, res, next) => {
   const { name, email, password, phone } = req.body;
   const { userId } = req.params;
 
-  // Find the user by ID
+
   const existUserId = await User.findById(userId);
   if (!existUserId) return next(new AppError("User ID not found", 404));
 
-  // Check if the email is already in use
+
   if (email) {
     const existEmail = await User.findOne({ email });
     if (existEmail && existEmail._id.toString() !== userId) {
@@ -80,13 +80,13 @@ export const updateUser = async (req, res, next) => {
     }
   }
 
-  // Update the user details
+
   if (name) existUserId.name = name;
   if (email) existUserId.email = email;
   if (password) existUserId.password = bcrypt.hashSync(password, 10);
   if (phone) existUserId.phone = phone;
 
-  // Handle image update if a file is uploaded
+ 
   if (req.file) {
     const fullPath = path.resolve(req.file.destination, req.file.filename);
     const uploadImage = await cloudUploade(fullPath);
@@ -96,7 +96,6 @@ export const updateUser = async (req, res, next) => {
       await cloudRemove(existUserId.image.publicId);
     }
 
-    // Update the user's image information
     existUserId.image = {
       url: uploadImage.secure_url,
       publicId: uploadImage.public_id,
@@ -106,7 +105,7 @@ export const updateUser = async (req, res, next) => {
     fs.unlinkSync(fullPath);
   }
 
-  // Save the updated user information
+
   const updatedUser = await existUserId.save();
   if (!updatedUser) return next(new AppError(message.user.failToUpdate, 500));
 

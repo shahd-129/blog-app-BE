@@ -14,19 +14,3 @@ export const auth = () => {
     });
   };
 };
-// export const auth = () => {
-//   return async (req, res, next) => {
-//     const { token } = req.headers;
-//     if (token){
-//       jwt.verify(token, "secret_token", async (error, decoded) => {
-//         if (error)
-//           return res.status(498).json({ message: "Invalid Token", error });
-//         next();
-//       });
-//         req.user = decoded;
-//     } return res.json({ message: "please signin" });
-
-   
- 
-//   };
-// };

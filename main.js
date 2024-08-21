@@ -11,7 +11,7 @@ app.use(express.json());
 const corsOptions = {
   origin: "http://localhost:3001",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Token"],
 };
 
 app.use(cors(corsOptions));
@@ -24,3 +24,4 @@ app.use("*", (req, res, next) => {
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+                      

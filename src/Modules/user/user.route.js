@@ -11,25 +11,24 @@ import {
 import { catchAysncErrorr } from "../../utils/ErrorHandling.js";
 import { auth } from "../../Middleware/meddlewar.js";
 import { fileUpload } from "../../utils/Multer.js";
-import { cloudUploade } from "../../utils/Multer-cloud.js";
 
 const userRouter = Router();
 
 userRouter.post(
   "/signup",
-  cloudUploade().single("image"),
+  fileUpload({ folder: "post" }).single("image"),
   catchAysncErrorr(signup)
 );
 userRouter.post(
   "/uploadImage/:userId",
-  cloudUploade().single("image"),
+  fileUpload({ folder: "post" }).single("image"),
   catchAysncErrorr(uploadImage)
 );
 userRouter.post("/login", catchAysncErrorr(login));
 userRouter.put(
   "/update/:userId",
   auth(),
-  cloudUploade().single("image"),
+  fileUpload({ folder: "post" }).single("image"),
   catchAysncErrorr(updateUser)
 );
 userRouter.delete("/delete/:userId", auth(), catchAysncErrorr(deleteUser));

@@ -8,7 +8,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 })
 
-export const cloudUploade = async (fileToUpload) =>{
+export const cloudUploadeImage = async (fileToUpload) =>{
     try{
         const imageUploade = await cloudinary.uploader.upload(fileToUpload)
         return imageUploade
@@ -17,7 +17,7 @@ export const cloudUploade = async (fileToUpload) =>{
         return error
     }
 }
-export const cloudRemove = async (publicId) =>{
+export const cloudRemoveImage = async (publicId) =>{
     try{
         const imageRemove = await cloudinary.uploader.destroy(publicId)
         return imageRemove
