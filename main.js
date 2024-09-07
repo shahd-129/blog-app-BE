@@ -4,6 +4,7 @@ import "./DB/connection.js";
 import userRouter from "./src/Modules/user/user.route.js";
 import { AppError } from "./src/utils/ErrorHandling.js";
 import postRouter from "./src/Modules/post/post.route.js";
+import commentRouter from "./src/Modules/comment/comment.routes.js";
 const app = express();
 const port = 3000;
 app.use(express.json());
@@ -18,6 +19,7 @@ app.use(cors(corsOptions));
 
 app.use("/user", userRouter);
 app.use("/post", postRouter);
+app.use("/comment" , commentRouter)
 
 app.use("*", (req, res, next) => {
   next(new AppError(req.originalUrl + "not found", 404));

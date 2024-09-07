@@ -2,11 +2,11 @@ import { Router } from "express";
 import { catchAysncErrorr } from "../../utils/ErrorHandling.js";
 import { auth } from "../../Middleware/meddlewar.js";
 import {
+  addReact,
   createPost,
   deletePost,
   getAllPost,
   updatePost,
-  uploadImage,
 } from "./post.controllers.js";
 import { fileUpload } from "../../utils/Multer.js";
 
@@ -19,14 +19,14 @@ postRouter.post(
   catchAysncErrorr(createPost)
 );
 postRouter.put(
-  "/update/:userId",
+  "/update/:id",
   auth(),
   fileUpload({ folder: "post" }).single("image"),
-
   catchAysncErrorr(updatePost)
 );
 postRouter.delete("/delete/:id", auth(), catchAysncErrorr(deletePost));
 postRouter.get("/getAllPost", auth(), catchAysncErrorr(getAllPost));
+postRouter.put("/like/:id", auth(), catchAysncErrorr(addReact));
 
 // postRouter.post(
 //   "/uploadImage",

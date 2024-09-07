@@ -7,28 +7,34 @@ import { AppError } from "../../utils/ErrorHandling.js";
 import { cloudRemoveImage, cloudUploadeImage } from "../../utils/cloudinary.js";
 
 export const createPost = async (req, res, next) => {
-  const { content } = req.body;
+  const { content} = req.body;
 
   if (!req.file) {
     return next(new AppError("Image is required", 400));
   }
 
-  if (!req.user.userId) {
-    return next(new AppError("User is not authenticated", 401));
-  }
+  const userId = req.user.userId;
+  const user = await User.findById(req.user.userId);
+  if (!user) return next(new AppError(message.user.notFound, 404));
+
 
   const fullPath = path.resolve(req.file.destination, req.file.filename);
   const uploadImage = await cloudUploadeImage(fullPath);
 
   const addPost = await Post.create({
     content,
-    userId: req.user.userId,
+    // userName: user.name,
+    userId,
     date: new Date(),
     image: {
       url: uploadImage.secure_url,
       publicId: uploadImage.public_id,
     },
-  });
+    // userName: req.user.name
+    
+    });
+   
+    
 
   fs.unlinkSync(fullPath);
 
@@ -41,84 +47,115 @@ export const createPost = async (req, res, next) => {
 
 export const updatePost = async (req, res, next) => {
   const { content } = req.body;
-  const existUserId = await User.findById(req.user.userId);
-  if (!existUserId) return next(new AppError(message.post.notFound, 404));
+  const post = await Post.findById(req.params.id);
+    if (!post) {
+      return next(new AppError("Post not found", 404));
+    }
+
+  const user = await User.findById(req.user.userId);
+  if (!user) return next(new AppError( "user not found", 404));
+
+
+    if ( req.user.userId === post.userId.toString()) {
+      await Post.findByIdAndUpdate(req.params.id , post);
+      await cloudUploadeImage(post.image.publicId);
+    }
 
   if (!req.file) {
     return next(new AppError("Image is required", 400));
-    console.log(req.file);
   }
 
   const fullPath = path.resolve(req.file.destination, req.file.filename);
   const uploadImage = await cloudUploadeImage(fullPath);
 
-  if (existUserId.image?.publicId) {
-    await cloudRemoveImage(existUserId.image.publicId);
+  if (post.image?.publicId) {
+    await cloudRemoveImage(post.image.publicId);
   }
   fs.unlinkSync(fullPath);
 
-  existUserId.image = {
+  post.image = {
     url: uploadImage.secure_url,
     publicId: uploadImage.public_id,
   };
 
-  if (content) existUserId.content = content;
+  if (content) post.content = content;
 
-  const updatedPost = await existUserId.save();
+  const updatedPost = await post.save();
   if (!updatedPost) {
     next(new AppError(message.post.failToUpdate, 500));
   }
 
   res.status(201).json({
-    message: message.post.updateSuccessfully,
-    data: updatePost,
+    message: "post updated successfully",
+    data: updatedPost,
     success: true,
   });
 };
 
+
+
 export const deletePost = async (req, res, next) => {
-  try {
-    const post = await Post.findById(req.params.id);
-    console.log("Found Post:", post);
-  
+try{
+  const post = await Post.findById(req.params.id);
+
     if (!post) {
       return next(new AppError("Post not found", 404));
     }
-    
     if (req.user.userId === post.userId.toString()) {
-      console.log("User authorized to delete the post." );
-      await Post.findByIdAndDelete(req.params.id);
       await cloudRemoveImage(post.image.publicId);
-      // TODO: Delete all comments related to the post
+      await Post.findByIdAndDelete(req.params.id)
+
+
+      const comments = await Comment.deleteMany({ postId: post._id });
+      if (comments.deletedCount > 0) {
+        return res.json({ message: "Post and associated comments deleted successfully", success: true });
+      }
+      return res.status(200).json({
+        message: "Post deleted successfully",
+        success: true,
+      });
+
     } else {
       return next(new AppError("User not authorized to delete this post", 403));
     }
-  
-    res.status(200).json({
-      message: "Post deleted successfully",
-      success: true,
-    });
   } catch (error) {
-    console.error("Error deleting post:", error);
-    return next(new AppError("Failed to delete post", 500));
+    return next(new AppError("An error occurred while deleting the post", 500));
   }
 };
+
 
 
 export const getAllPost = async (req, res, next) => {
-  const getPost = await Post.find();
+  const getPost = await Post.find().populate("comments");
   res.status(200).json({ message: "success", data: getPost, success: true });
 };
 
-export const uploadImage = async (req, res, next) => {
-  if (!req.file) {
-    return next(new AppError(message.image.required));
-  }
 
-  const fullPath = path.resolve(req.file.destination, req.file.filename);
-  const uploadImage = await cloudUploadeImage(fullPath);
+export const addReact = async (req , res , next ) =>{
+  let post = await Post.findById(req.params.id)
+  if(!post) return next(new AppError("post not found"))
 
-  const user = await User.findById(req.user.id);
-  if (user.pr)
-    res.status(200).json({ message: "your profile image upload success" });
-};
+    const postedReact = post.likes.find((user) => user.toString() === req.user.userId)
+   
+    
+    if(postedReact) {
+      post = await Post.findByIdAndUpdate(req.params.id , {$pull: {likes: req.user.userId} , new: true})
+    }else{
+      post = await Post.findByIdAndUpdate(req.params.id , {$push: {likes: req.user.userId} , new: true})
+    }
+
+    res.status(200).json({message:"React Added Success" , success: true , data: post})
+}
+
+// export const uploadImage = async (req, res, next) => {
+//   if (!req.file) {
+//     return next(new AppError(message.image.required));
+//   }
+
+//   const fullPath = path.resolve(req.file.destination, req.file.filename);
+//   const uploadImage = await cloudUploadeImage(fullPath);
+
+//   const user = await User.findById(req.user.id);
+//   if (user.pr)
+//     res.status(200).json({ message: "your profile image upload success" });
+// };

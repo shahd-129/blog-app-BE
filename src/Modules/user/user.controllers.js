@@ -5,7 +5,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { AppError } from "../../utils/ErrorHandling.js";
 import { message } from "../../utils/constant/message.js";
-import { cloudRemoveImage, cloudUploadeImage } from "../../utils/cloudinary.js";
+import Post from "../../../DB/Models/post.js";
+// import { cloudRemoveImage, cloudUploadeImage } from "../../utils/cloudinary.js";
 
 export const signup = async (req, res, next) => {
   const { email, password, phone, name } = req.body;
@@ -30,10 +31,10 @@ export const signup = async (req, res, next) => {
     password: hashPass,
     phone,
     name,
-  //   image: {
-  //     url: uploadImage.secure_url,
-  //     publicId: uploadImage.public_id,
-  //   },
+    //   image: {
+    //     url: uploadImage.secure_url,
+    //     publicId: uploadImage.public_id,
+    //   },
   });
 
   // fs.unlinkSync(fullPath);
@@ -66,45 +67,43 @@ export const login = async (req, res) => {
 
 export const updateUser = async (req, res, next) => {
   const { name, email, password, phone } = req.body;
-  const { userId } = req.params;
 
-
-  const existUserId = await User.findById(userId);
+  const existUserId = await User.findById(req.user.userId);
   if (!existUserId) return next(new AppError("User ID not found", 404));
-
 
   if (email) {
     const existEmail = await User.findOne({ email });
-    if (existEmail && existEmail._id.toString() !== userId) {
+    if (existEmail && existEmail._id.toString() !== req.user.userId) {
       return next(new AppError(message.user.alreadyExist, 409));
     }
   }
-
-
+  // to update name in posts
+  await Post.updateMany(
+    { userId: existUserId._id },
+    { userName: existUserId.name }
+  );
   if (name) existUserId.name = name;
   if (email) existUserId.email = email;
   if (password) existUserId.password = bcrypt.hashSync(password, 10);
   if (phone) existUserId.phone = phone;
 
- 
-  if (req.file) {
-    const fullPath = path.resolve(req.file.destination, req.file.filename);
-    const uploadImage = await cloudUploade(fullPath);
+  // if (req.file) {
+  //   const fullPath = path.resolve(req.file.destination, req.file.filename);
+  //   const uploadImage = await cloudUploade(fullPath);
 
-    // Remove the old image from Cloudinary if it exists
-    if (existUserId.image?.publicId) {
-      await cloudRemove(existUserId.image.publicId);
-    }
+  //   // Remove the old image from Cloudinary if it exists
+  //   if (existUserId.image?.publicId) {
+  //     await cloudRemove(existUserId.image.publicId);
+  //   }
 
-    existUserId.image = {
-      url: uploadImage.secure_url,
-      publicId: uploadImage.public_id,
-    };
+  //   existUserId.image = {
+  //     url: uploadImage.secure_url,
+  //     publicId: uploadImage.public_id,
+  //   };
 
-    // Delete the local image file after uploading to Cloudinary
-    fs.unlinkSync(fullPath);
-  }
-
+  // Delete the local image file after uploading to Cloudinary
+  // fs.unlinkSync(fullPath);
+  // }
 
   const updatedUser = await existUserId.save();
   if (!updatedUser) return next(new AppError(message.user.failToUpdate, 500));
@@ -117,13 +116,16 @@ export const updateUser = async (req, res, next) => {
 };
 
 export const deleteUser = async (req, res, next) => {
-  const { userId } = req.body;
+  try {
+    const user = await User.findById(req.user.userId);
 
-  await User.deleteOne(userId);
+    if (!user) return next(new AppError("user not found"));
+    await User.findByIdAndDelete(req.user.userId);
 
-  res
-    .status(200)
-    .json({ message: message.user.deleteSuccessfully, success: true });
+    res.status(200).json({ message: "user deleted success", success: true });
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 export const uploadImage = async (req, res, next) => {
@@ -160,8 +162,6 @@ export const uploadImage = async (req, res, next) => {
 export const deleteImage = async (req, res, next) => {
   const user = await User.findById(req.params.userId);
   if (!user) return next(new AppError(message.user.notFound, 404));
-  // get All post from db **todo
-  // delete all posts image from cloudinary **todo
 
   await cloudRemove(user.image.publicId);
 
@@ -171,8 +171,8 @@ export const deleteImage = async (req, res, next) => {
 };
 
 export const getUserById = async (req, res, next) => {
-  const { userId } = req.params;
-  const existUserId = await User.findById(userId);
+  // const { userId } = req.params;
+  const existUserId = await User.findById(req.params.id).populate("posts");
   if (!existUserId) return next(new AppError(message.user.notFound, 404));
 
   res.status(200).json({ success: true, data: existUserId });

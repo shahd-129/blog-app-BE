@@ -19,20 +19,16 @@ userRouter.post(
   fileUpload({ folder: "post" }).single("image"),
   catchAysncErrorr(signup)
 );
-userRouter.post(
-  "/uploadImage/:userId",
-  fileUpload({ folder: "post" }).single("image"),
-  catchAysncErrorr(uploadImage)
-);
+// userRouter.post(
+//   "/uploadImage/:userId",
+//   fileUpload({ folder: "post" }).single("image"),
+//   catchAysncErrorr(uploadImage)
+// );
 userRouter.post("/login", catchAysncErrorr(login));
-userRouter.put(
-  "/update/:userId",
-  auth(),
-  fileUpload({ folder: "post" }).single("image"),
-  catchAysncErrorr(updateUser)
+userRouter.put("/update/:id", auth(), catchAysncErrorr(updateUser)
 );
-userRouter.delete("/delete/:userId", auth(), catchAysncErrorr(deleteUser));
+userRouter.delete("/delete/:id", auth(), catchAysncErrorr(deleteUser));
 // userRouter.delete("/deleteImage/:postId", auth(), catchAysncErrorr(deleteImage));
-userRouter.get("/getuser/:userId", auth(), catchAysncErrorr(getUserById));
+userRouter.get("/getuser/:id", auth(), catchAysncErrorr(getUserById));
 
 export default userRouter;
