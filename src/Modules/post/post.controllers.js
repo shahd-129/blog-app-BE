@@ -23,14 +23,13 @@ export const createPost = async (req, res, next) => {
 
   const addPost = await Post.create({
     content,
-    // userName: user.name,
+    userName: user.name,
     userId,
     date: new Date(),
     image: {
       url: uploadImage.secure_url,
       publicId: uploadImage.public_id,
     },
-    // userName: req.user.name
     
     });
    
@@ -91,7 +90,6 @@ export const updatePost = async (req, res, next) => {
     success: true,
   });
 };
-
 
 
 export const deletePost = async (req, res, next) => {

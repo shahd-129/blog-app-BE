@@ -6,7 +6,7 @@ import { auth } from "../../Middleware/meddlewar.js";
 const commentRouter =  Router()
 
 commentRouter.post("/createComment" , auth() , catchAysncErrorr(createComment))
-// commentRouter.get("/" , auth() , catchAysncErrorr(getAllComment))
+
 
 commentRouter.put("/updateComment/:id" , auth() , catchAysncErrorr(updateComment))
 commentRouter.delete("/deleteComment/:id" , auth() , catchAysncErrorr(deleteComment))

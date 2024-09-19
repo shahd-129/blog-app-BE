@@ -8,7 +8,6 @@ const postSchema = new mongoose.Schema(
     },
     image: {
       type: Object,
-      uniqe: true,
       default: {
         secure_url: null,
         public_id: "",

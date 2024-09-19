@@ -41,13 +41,8 @@ userSchema.virtual("posts" , {
 
 userSchema.pre('findOneAndDelete', async function(next) {
   try {
-    // الحصول على المستخدم المُراد حذفه
-    const user = this.getQuery();
-    
-    // حذف جميع المشاركات المرتبطة بالمستخدم
+    const user = this.getQuery();    
     await Post.deleteMany({ userId: user._id });
-    
-    // حذف جميع التعليقات المرتبطة بالمستخدم
     await Comment.deleteMany({ userId: user._id });
 
     next();
@@ -55,8 +50,6 @@ userSchema.pre('findOneAndDelete', async function(next) {
     next(error);
   }
 });
-
-
 const User = mongoose.model("User", userSchema);
 
 export default User;
