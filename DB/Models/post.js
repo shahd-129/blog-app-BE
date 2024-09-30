@@ -12,6 +12,7 @@ const postSchema = new mongoose.Schema(
         secure_url: null,
         public_id: "",
       },
+      required: false
     },
 
     userId: {
