@@ -41,19 +41,23 @@ export const updateComment = async (req, res, next) => {
     .json({ message: "comment update success", success: true, data: update });
 };
 
-export const deleteComment = async (req, res, next) => {
-  const { postId } = req.body;
-  
-  const findComment = await Comment.findById(req.params.id);
-  if (!findComment) return next(new AppError("comment not found", 404));
 
-  if (req.user.userId === findComment.userId.toString()) {
-    await Post.updateOne({ _id: postId }, { $inc: { commentCount: -1 } });
-    await Comment.findByIdAndDelete(req.params.id);
+export const deleteComment = async (req, res) => {
+  const commentId = req.params.id;
+  try {
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ success: false, message: "Comment not found" });
+    }
+  
+    const postId = comment.postId; 
     
-    
-    res.status(200).json({ message: "comment deleted successfully", success: true });
-  } else {
-    res.status(403).json({ message: "access denied, not allowed" });
+    await Comment.findByIdAndDelete(commentId);
+
+    await Post.findByIdAndUpdate(postId, { $inc: { commentCount: -1 } });
+
+    return res.status(200).json({ success: true, message: "Comment deleted successfully" });
+  } catch (error) {
+    console.error(error);
   }
 };

@@ -103,7 +103,8 @@ export const deletePost = async (req, res, next) => {
         await cloudRemoveImage(post.image.publicId);
       }
 
-      await Post.findByIdAndDelete(req.params.id);
+      await Post.findByIdAndDelete(req.params.id );
+
 
       const comments = await Comment.deleteMany({ postId: post._id });
     
